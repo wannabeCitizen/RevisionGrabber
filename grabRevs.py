@@ -43,6 +43,7 @@ def revFile(file_ID):
 	count = 0
 	for item in revisions['items']:
 		fd = open(data_file + "%d" % count, "a+")
+		print item['id']
 		fileLocation = item['exportLinks']['text/plain']
 		myFile = requests.get(fileLocation)
 		fd.write(myFile.content)

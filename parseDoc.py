@@ -8,45 +8,55 @@
 import re
 import os
 import sys
+import json
 
-def parseMe(myFile, field):
-	print "Printing all %s fields from %s by team" % (field, myFile)
+def parseMe(myFile):
+	print "Creating a JSON object out of %s" % myFile
+
+	jsonRep = {}
 
 	with open(myFile, "r") as pd:
+		currTeam = ""
 		for line in pd:
 			if re.match('Team', line):
-				print "\n" + line
-			elif re.match(field, line):
-				blank = False
-				while not blank:
-					nextLine = pd.next()
-					if nextLine == "\n":
-						blank = True
-					else:
-						print nextLine.strip()
+				currTeam = line.strip()
+				teamDict = parseTeam(pd)
+				jsonRep[currTeam] = teamDict
+			elif line == "\n":
+				continue
+			else:
+				newSegment = parseSegment(pd, line)
+				jsonRep[currTeam].update(newSegment)
 
-def parseTeam(myFile, team):
-	print "Printing all objectives for %s from %s \n" % (team, myFile)
+	myJson = json.dumps(jsonRep)
+	print myJson
 
-	with open(myFile, "r") as pd:
-		for line in pd:
-			if re.match(team, line):
-				print line
-				nextTeam = False
-				while not nextTeam:
-					nextLine = pd.next()
-					if re.match("Team", nextLine):
-						nextTeam = True
-					else:
-						print nextLine.strip()
+def parseTeam(currFile):
+	team = {}
+	team['members'] = ""
+	nextLine = currFile.next()
+	while nextLine != "\n":
+		team['members'] += nextLine.strip()
+		nextLine = currFile.next()
+	return team
 
+def parseSegment(currFile, thisLine):
+	newSeg = {}
+	myVal = thisLine.strip()
+	newSeg[myVal] = ""
+	nextLine = currFile.next()
+	while nextLine != "\n":
+		newSeg[myVal] += nextLine.strip()
+		try:
+			nextLine = currFile.next()
+		except:
+			print "End of File"
+			break
+	return newSeg
 
+	
 
 if __name__ == "__main__":
 	theFile = str(sys.argv[1])
-	theField = str(sys.argv[2])
-	if re.match("Team", theField):
-		parseTeam(theFile, theField)
-	else:
-		parseMe(theFile, theField)
+	parseMe(theFile)
 
